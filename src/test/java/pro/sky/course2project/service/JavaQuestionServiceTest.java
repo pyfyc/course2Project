@@ -1,55 +1,57 @@
 package pro.sky.course2project.service;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import pro.sky.course2project.model.Question;
+import pro.sky.course2project.service.impl.JavaQuestionService;
 
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class JavaQuestionServiceTest {
-    private final QuestionService out = new JavaQuestionService();
+    @Mock
+    private QuestionRepository questionRepositoryMock;
+    @InjectMocks
+    private QuestionService questionService = new JavaQuestionService(questionRepositoryMock);
 
     @AfterEach
     public void AfterEach() {
-        out.getAll().forEach(question -> out.remove(question));
+        questionService.getAllQuestions().forEach(question -> questionService.removeQuestion(question));
     }
 
     @ParameterizedTest
     @MethodSource("params")
-    void addPositiveTest(String question, String answer) {
-        assertThat(out.getAll()).isEmpty();
+    void addQuestionPositiveTest(String question, String answer) {
+        when(questionRepositoryMock.addQuestion(question, answer))
+                .thenReturn(true);
+        when(questionRepositoryMock.addQuestion(new Question(question, answer)))
+                .thenReturn(true);
 
-        Question expected = out.add(new Question(question, answer));
+        assertEquals(true, questionService.addQuestion(question, answer));
+        assertEquals(true, questionService.addQuestion(new Question(question, answer)));
 
-        assertThat(out.getAll())
-                .hasSize(1)
-                .containsExactly(expected);
-
-        // Adding already existing question should return null.
-        assertThat(out.add(question, answer)).isEqualTo(null);
+        verify(questionRepositoryMock, times(1)).addQuestion(question, answer);
+        verify(questionRepositoryMock, times(1)).addQuestion(new Question(question, answer));
     }
 
     @ParameterizedTest
     @MethodSource("params")
-    void removePositiveTest(String question, String answer) {
-        assertThat(out.getAll()).isEmpty();
+    void removeQuestionPositiveTest(String question, String answer) {
+        when(questionRepositoryMock.removeQuestion(new Question(question, answer)))
+                .thenReturn(true);
 
-        out.add(new Question(question, answer));
-        Question expected = out.remove(new Question(question, answer));
+        assertEquals(true, questionService.removeQuestion(new Question(question, answer)));
 
-        assertThat(expected).isEqualTo(new Question(question, answer));
-        // Removing not existing question should return null.
-        assertThat(out.remove(new Question(question, answer))).isEqualTo(null);
-    }
-
-    @Test
-    void getRandomQuestion() {
-        // How to test this?
+        verify(questionRepositoryMock, times(1)).removeQuestion(new Question(question, answer));
     }
 
     public static Stream<Arguments> params() {

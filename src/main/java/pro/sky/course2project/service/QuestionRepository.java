@@ -4,7 +4,7 @@ import pro.sky.course2project.model.Question;
 
 import java.util.Collection;
 
-public interface QuestionService {
+public interface QuestionRepository {
     Boolean addQuestion(String question, String answer);
 
     Boolean addQuestion(Question question);

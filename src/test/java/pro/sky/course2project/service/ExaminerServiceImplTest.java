@@ -5,45 +5,73 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pro.sky.course2project.exception.NotEnoughQuestionsException;
 import pro.sky.course2project.model.Question;
+import pro.sky.course2project.service.impl.ExaminerServiceImpl;
+import pro.sky.course2project.service.impl.JavaQuestionService;
+import pro.sky.course2project.service.impl.MathQuestionService;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
+import static pro.sky.course2project.service.ServiceConstants.*;
 
 @ExtendWith(MockitoExtension.class)
 class ExaminerServiceImplTest {
-
     @Mock
-    private QuestionService questionService;
+    private JavaQuestionService javaQuestionServiceMock;
+    @Mock
+    private MathQuestionService mathQuestionServiceMock;
 
     @InjectMocks
     private ExaminerServiceImpl examinerService;
 
     @BeforeEach
     public void beforeEach() {
-        List<Question> questions = List.of(
-                new Question("Question1", "Answer1"),
-                new Question("Question2", "Answer2"),
-                new Question("Question3", "Answer3"),
-                new Question("Question4", "Answer4"),
-                new Question("Question5", "Answer5"),
-                new Question("Question6", "Answer6"),
-                new Question("Question7", "Answer7"),
-                new Question("Question8", "Answer8"),
-                new Question("Question9", "Answer9"),
-                new Question("Question10", "Answer10")
+        List<Question> javaQuestions = List.of(
+                new Question(JAVA_QUESTION_1, JAVA_ANSWER_1),
+                new Question(JAVA_QUESTION_2, JAVA_ANSWER_2),
+                new Question(JAVA_QUESTION_3, JAVA_ANSWER_3),
+                new Question(JAVA_QUESTION_4, JAVA_ANSWER_4),
+                new Question(JAVA_QUESTION_5, JAVA_ANSWER_5)
         );
-        when(questionService.getAll()).thenReturn(questions);
+        List<Question> mathQuestions = List.of(
+                new Question(MATH_QUESTION_1, MATH_ANSWER_1),
+                new Question(MATH_QUESTION_2, MATH_ANSWER_2),
+                new Question(MATH_QUESTION_3, MATH_ANSWER_3),
+                new Question(MATH_QUESTION_4, MATH_ANSWER_4),
+                new Question(MATH_QUESTION_5, MATH_ANSWER_5)
+        );
+        when(javaQuestionServiceMock.getAllQuestions()).thenReturn(javaQuestions);
+        when(mathQuestionServiceMock.getAllQuestions()).thenReturn(mathQuestions);
+
+        examinerService = new ExaminerServiceImpl(javaQuestionServiceMock, mathQuestionServiceMock);
     }
 
     @Test
     void getQuestionsPositiveTest() {
-        // Not working. Calling getQuestions() goes into infinite loop.
+        Mockito.when(javaQuestionServiceMock.getRandomQuestion()).thenReturn(new Question(JAVA_QUESTION_1, JAVA_ANSWER_1));
+
+        assertThat(examinerService.getQuestions(1))
+                .hasSize(1);
+
+        Mockito.when(mathQuestionServiceMock.getRandomQuestion()).thenReturn(
+                new Question(MATH_QUESTION_2, MATH_ANSWER_2),
+                new Question(MATH_QUESTION_1, MATH_ANSWER_1),
+                new Question(MATH_QUESTION_5, MATH_ANSWER_5));
+
+        assertThat(examinerService.getQuestions(3))
+                .hasSize(3);
+
+        Mockito.when(javaQuestionServiceMock.getRandomQuestion()).thenReturn(
+                new Question(JAVA_QUESTION_1, JAVA_ANSWER_1),
+                new Question(JAVA_QUESTION_3, JAVA_ANSWER_3),
+                new Question(JAVA_QUESTION_5, JAVA_ANSWER_5));
+
         assertThat(examinerService.getQuestions(3))
                 .hasSize(3);
     }
@@ -51,6 +79,8 @@ class ExaminerServiceImplTest {
     @Test
     void getQuestionsNegativeTest() {
         assertThatExceptionOfType(NotEnoughQuestionsException.class)
-                .isThrownBy(() -> examinerService.getQuestions(11));
+                .isThrownBy(() -> examinerService.getQuestions(
+                        javaQuestionServiceMock.getAllQuestions().size() +
+                                mathQuestionServiceMock.getAllQuestions().size() + 1));
     }
 }

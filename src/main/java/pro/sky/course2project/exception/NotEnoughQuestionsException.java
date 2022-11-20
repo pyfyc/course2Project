@@ -13,15 +13,4 @@ public class NotEnoughQuestionsException extends RuntimeException {
         super(message);
     }
 
-    public NotEnoughQuestionsException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public NotEnoughQuestionsException(Throwable cause) {
-        super(cause);
-    }
-
-    public NotEnoughQuestionsException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
 }
